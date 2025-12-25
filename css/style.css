@@ -1,0 +1,65 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f5f7fa;
+  color: #333;
+}
+
+/* NAVBAR */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background-color: #0f172a;
+  color: white;
+}
+
+.navbar a {
+  color: white;
+  margin-left: 15px;
+  text-decoration: none;
+}
+
+/* HERO */
+.hero {
+  text-align: center;
+  padding: 60px 20px;
+  background-color: #1e293b;
+  color: white;
+}
+
+.hero button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #38bdf8;
+  border: none;
+  cursor: pointer;
+}
+
+/* FEATURES */
+.features {
+  padding: 40px;
+  text-align: center;
+}
+
+.card {
+  background: white;
+  margin: 20px auto;
+  padding: 20px;
+  max-width: 300px;
+  border-radius: 8px;
+}
+
+/* FOOTER */
+footer {
+  text-align: center;
+  padding: 15px;
+  background-color: #0f172a;
+  color: white;
+}
