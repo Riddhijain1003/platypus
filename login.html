@@ -12,17 +12,21 @@
   </header>
 
   <section class="features">
-    <h2>Login</h2>
+  <h2>Login</h2>
 
-    <input type="email" placeholder="Email"><br><br>
-    <input type="password" placeholder="Password"><br><br>
+  <input id="email" type="email" placeholder="Email"><br><br>
+  <input id="password" type="password" placeholder="Password"><br><br>
 
-    <a href="dashboard.html">
-      <button>Login</button>
-    </a>
-  </section>
-  <script src="js/script.js"></script>
+  <button id="loginBtn">Login</button>
 
+  <p id="error" style="color:red;"></p>
+</section>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+<script type="module" src="js/script.js"></script>
+
+ 
 
 </body>
 </html>
