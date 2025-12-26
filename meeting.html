@@ -20,16 +20,26 @@
       <video id="localVideo" autoplay muted></video>
       <video id="remoteVideo" autoplay></video>
     </div>
+     <div class="transcript-box">
+       <h3>Live Transcript</h3>
+       <div id="transcript"></div>
+     </div>
+
 
     <div class="controls">
      <button id="muteBtn">🎤 Mute</button>
      <button id="cameraBtn">📷 Camera Off</button>
     <button class="end" onclick="window.location.href='dashboard.html'">End Call</button>
+    <button id="startTranscriptBtn">🎙 Start Transcription</button>
+
 </div>
 
   </main>
 
-  <script src="./js/meeting.js"></script>
+  
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="js/meeting.js"></script>
+
 </body>
 </html>
 

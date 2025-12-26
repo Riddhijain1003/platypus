@@ -9,27 +9,36 @@ const io = new Server(server, {
 });
 
 let clients = [];
+let readyCount = 0;
 
 io.on("connection", socket => {
   if (clients.length >= 2) {
-    console.log("Extra user rejected");
     socket.disconnect();
     return;
   }
 
   clients.push(socket.id);
-  console.log("User connected:", socket.id, "Total:", clients.length);
+  console.log("User connected:", socket.id);
 
-  // Send role
   socket.emit("role", clients.length === 1 ? "caller" : "callee");
 
-  socket.on("offer", offer => socket.broadcast.emit("offer", offer));
-  socket.on("answer", answer => socket.broadcast.emit("answer", answer));
+  socket.on("ready", () => {
+    readyCount++;
+    console.log("Ready count:", readyCount);
+
+    if (readyCount === 2) {
+      io.emit("both-ready");
+    }
+  });
+
+  socket.on("offer", o => socket.broadcast.emit("offer", o));
+  socket.on("answer", a => socket.broadcast.emit("answer", a));
   socket.on("ice-candidate", c => socket.broadcast.emit("ice-candidate", c));
 
   socket.on("disconnect", () => {
     clients = clients.filter(id => id !== socket.id);
-    console.log("User disconnected. Total:", clients.length);
+    readyCount = 0;
+    console.log("User disconnected");
   });
 });
 

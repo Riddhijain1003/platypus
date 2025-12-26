@@ -8,19 +8,20 @@
 <body>
 
   <header class="navbar">
-    <h1 class="logo">Platypus Dashboard</h1>
-    <nav>
-      <a href="meeting.html">New Meeting</a>
-      <a href="index.html">Logout</a>
-    </nav>
+    <h1>Platypus Dashboard</h1>
+    <button onclick="window.location.href='meeting.html'">
+      ➕ New Meeting
+    </button>
   </header>
 
-  <section class="features">
-    <h2>Your Meetings</h2>
-    <p>No meetings yet.</p>
-  </section>
-  <script src="js/script.js"></script>
+  <main class="dashboard">
+    <h2>Meeting History</h2>
 
+    <div id="meetingsList" class="meeting-list">
+      <!-- meetings will appear here -->
+    </div>
+  </main>
 
+  <script src="js/dashboard.js"></script>
 </body>
 </html>
