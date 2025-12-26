@@ -8,19 +8,28 @@
 <body>
 
   <header class="navbar">
-    <h1 class="logo">Live Meeting</h1>
+    <h1 class="logo">Platypus Meeting</h1>
     <nav>
-      <a href="dashboard.html">End Meeting</a>
+      <a href="dashboard.html">Leave</a>
     </nav>
   </header>
 
-  <section class="features">
-    <h2>Video Area</h2>
-    <div class="card">Your Video</div>
-    <div class="card">Participant Video</div>
-  </section>
-  <script src="js/script.js"></script>
+  <main class="meeting-container">
 
+    <div class="video-grid">
+      <video id="localVideo" autoplay muted></video>
+      <video id="remoteVideo" autoplay></video>
+    </div>
 
+    <div class="controls">
+     <button id="muteBtn">🎤 Mute</button>
+     <button id="cameraBtn">📷 Camera Off</button>
+    <button class="end" onclick="window.location.href='dashboard.html'">End Call</button>
+</div>
+
+  </main>
+
+  <script src="./js/meeting.js"></script>
 </body>
 </html>
+
