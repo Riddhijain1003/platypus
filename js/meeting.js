@@ -78,6 +78,8 @@ muteBtn?.addEventListener("click", () => {
 
   isMuted = !isMuted;
   muteBtn.innerText = isMuted ? "🔇 Unmute" : "🎤 Mute";
+  muteBtn.classList.toggle("active");
+
 });
 
 cameraBtn?.addEventListener("click", () => {

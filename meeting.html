@@ -5,41 +5,40 @@
   <title>Meeting | Platypus</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="meeting-body">
 
-  <header class="navbar">
-    <h1 class="logo">Platypus Meeting</h1>
-    <nav>
-      <a href="dashboard.html">Leave</a>
-    </nav>
+  <!-- TOP BAR -->
+  <header class="top-bar">
+    <div class="meeting-title">Platypus Meeting</div>
+    <div class="meeting-status">● Live</div>
   </header>
 
-  <main class="meeting-container">
+  <!-- MAIN CONTENT -->
+  <main class="meeting-main">
 
-    <div class="video-grid">
-      <video id="localVideo" autoplay muted></video>
-      <video id="remoteVideo" autoplay></video>
-    </div>
-     <div class="transcript-box">
-       <h3>Live Transcript</h3>
-       <div id="transcript"></div>
-     </div>
+    <!-- ACTIVE SPEAKER -->
+    <section class="active-speaker">
+      <video id="remoteVideo" autoplay playsinline></video>
+      <div class="name-tag">Participant</div>
+    </section>
 
-
-    <div class="controls">
-     <button id="muteBtn">🎤 Mute</button>
-     <button id="cameraBtn">📷 Camera Off</button>
-    <button class="end" onclick="window.location.href='dashboard.html'">End Call</button>
-    <button id="startTranscriptBtn">🎙 Start Transcription</button>
-
-</div>
+    <!-- SELF VIEW -->
+    <aside class="self-view">
+      <video id="localVideo" autoplay muted playsinline></video>
+      <div class="name-tag">You</div>
+    </aside>
 
   </main>
 
-  
-  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-  <script src="js/meeting.js"></script>
+  <!-- CONTROLS -->
+  <footer class="controls-bar">
+    <button id="muteBtn">🎤</button>
+    <button id="cameraBtn">📷</button>
+    <button id="startTranscriptBtn">📝</button>
+    <button class="end-call" onclick="window.location.href='dashboard.html'">❌</button>
+  </footer>
 
 </body>
+
 </html>
 
