@@ -3,6 +3,9 @@ const socket = io("http://localhost:3000");
 const localVideo = document.getElementById("localVideo");
 const remoteVideo = document.getElementById("remoteVideo");
 
+console.log("localVideo:", localVideo);
+console.log("remoteVideo:", remoteVideo)
+
 let localStream;
 let peerConnection;
 let role;
@@ -15,6 +18,8 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
   .then(stream => {
     localStream = stream;
     localVideo.srcObject = stream;
+    localVideo.play().catch(() => {});
+
 
     peerConnection = new RTCPeerConnection(config);
 
@@ -22,8 +27,9 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
       peerConnection.addTrack(track, stream)
     );
 
-    peerConnection.ontrack = e => {
-      remoteVideo.srcObject = e.streams[0];
+   peerConnection.ontrack = e => {
+     remoteVideo.srcObject = e.streams[0];
+     remoteVideo.play().catch(() => {});
     };
 
     peerConnection.onicecandidate = e => {
