@@ -19,6 +19,31 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
     localStream = stream;
     localVideo.srcObject = stream;
     localVideo.play().catch(() => {});
+    const audioContext = new AudioContext();
+const analyser = audioContext.createAnalyser();
+const microphone = audioContext.createMediaStreamSource(stream);
+
+microphone.connect(analyser);
+analyser.fftSize = 512;
+
+const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+function detectSpeech() {
+  analyser.getByteFrequencyData(dataArray);
+
+  const volume = dataArray.reduce((a, b) => a + b) / dataArray.length;
+
+  if (volume > 25) {
+    document.querySelector(".self-view")?.classList.add("active");
+  } else {
+    document.querySelector(".self-view")?.classList.remove("active");
+  }
+
+  requestAnimationFrame(detectSpeech);
+}
+
+detectSpeech();
+
 
 
     peerConnection = new RTCPeerConnection(config);
@@ -30,6 +55,34 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
    peerConnection.ontrack = e => {
      remoteVideo.srcObject = e.streams[0];
      remoteVideo.play().catch(() => {});
+     const remoteStream = e.streams[0];
+remoteVideo.srcObject = remoteStream;
+
+const remoteAudioContext = new AudioContext();
+const remoteAnalyser = remoteAudioContext.createAnalyser();
+const remoteSource = remoteAudioContext.createMediaStreamSource(remoteStream);
+
+remoteSource.connect(remoteAnalyser);
+remoteAnalyser.fftSize = 512;
+
+const remoteData = new Uint8Array(remoteAnalyser.frequencyBinCount);
+
+function detectRemoteSpeech() {
+  remoteAnalyser.getByteFrequencyData(remoteData);
+
+  const volume = remoteData.reduce((a, b) => a + b) / remoteData.length;
+
+  if (volume > 25) {
+    document.querySelector(".active-speaker")?.classList.add("active");
+  } else {
+    document.querySelector(".active-speaker")?.classList.remove("active");
+  }
+
+  requestAnimationFrame(detectRemoteSpeech);
+}
+
+detectRemoteSpeech();
+
     };
 
     peerConnection.onicecandidate = e => {
