@@ -242,3 +242,20 @@ video {
   outline-offset: -4px;
   transition: outline 0.2s ease;
 }
+.active-speaker {
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.active-speaker.active {
+  transform: scale(1.01);
+  box-shadow: 0 0 0 4px #22c55e;
+}
+
+.self-view {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.self-view.active {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 3px #22c55e;
+}

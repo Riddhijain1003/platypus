@@ -1,110 +1,147 @@
+// ===== SOCKET =====
 const socket = io("http://localhost:3000");
 
+// ===== DOM =====
 const localVideo = document.getElementById("localVideo");
 const remoteVideo = document.getElementById("remoteVideo");
 
-console.log("localVideo:", localVideo);
-console.log("remoteVideo:", remoteVideo)
-
+// ===== WEBRTC =====
 let localStream;
 let peerConnection;
-let role;
 
 const config = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
 };
 
-navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-  .then(stream => {
-    localStream = stream;
-    localVideo.srcObject = stream;
-    localVideo.play().catch(() => {});
-    const audioContext = new AudioContext();
-const analyser = audioContext.createAnalyser();
-const microphone = audioContext.createMediaStreamSource(stream);
+// ===== ACTIVE SPEAKER STATE =====
+let localSpeaking = false;
+let localTimeout;
+let remoteSpeaking = false;
+let remoteTimeout;
 
-microphone.connect(analyser);
-analyser.fftSize = 512;
+// ===== HELPER FUNCTIONS =====
+function updateLocalSpeaker(isSpeaking) {
+  const selfView = document.querySelector(".self-view");
 
-const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-function detectSpeech() {
-  analyser.getByteFrequencyData(dataArray);
-
-  const volume = dataArray.reduce((a, b) => a + b) / dataArray.length;
-
-  if (volume > 25) {
-    document.querySelector(".self-view")?.classList.add("active");
-  } else {
-    document.querySelector(".self-view")?.classList.remove("active");
+  if (isSpeaking && !localSpeaking) {
+    selfView?.classList.add("active");
+    localSpeaking = true;
   }
 
-  requestAnimationFrame(detectSpeech);
+  if (!isSpeaking && localSpeaking) {
+    clearTimeout(localTimeout);
+    localTimeout = setTimeout(() => {
+      selfView?.classList.remove("active");
+      localSpeaking = false;
+    }, 300);
+  }
 }
 
-detectSpeech();
+function updateRemoteSpeaker(isSpeaking) {
+  const activeSpeaker = document.querySelector(".active-speaker");
 
+  if (isSpeaking && !remoteSpeaking) {
+    activeSpeaker?.classList.add("active");
+    remoteSpeaking = true;
+  }
 
+  if (!isSpeaking && remoteSpeaking) {
+    clearTimeout(remoteTimeout);
+    remoteTimeout = setTimeout(() => {
+      activeSpeaker?.classList.remove("active");
+      remoteSpeaking = false;
+    }, 300);
+  }
+}
 
+// ===== GET USER MEDIA =====
+navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+  .then(stream => {
+    console.log("GOT LOCAL STREAM");
+
+    localStream = stream;
+    localVideo.srcObject = stream;
+    localVideo.muted = true;
+    localVideo.play().catch(() => {});
+
+    // ===== LOCAL ACTIVE SPEAKER DETECTION =====
+    const audioContext = new AudioContext();
+    const analyser = audioContext.createAnalyser();
+    const microphone = audioContext.createMediaStreamSource(stream);
+
+    microphone.connect(analyser);
+    analyser.fftSize = 512;
+
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+    function detectSpeech() {
+      analyser.getByteFrequencyData(dataArray);
+      const volume =
+        dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+
+      updateLocalSpeaker(volume > 25);
+      requestAnimationFrame(detectSpeech);
+    }
+
+    detectSpeech();
+
+    // ===== PEER CONNECTION =====
     peerConnection = new RTCPeerConnection(config);
 
     stream.getTracks().forEach(track =>
       peerConnection.addTrack(track, stream)
     );
 
-   peerConnection.ontrack = e => {
-     remoteVideo.srcObject = e.streams[0];
-     remoteVideo.play().catch(() => {});
-     const remoteStream = e.streams[0];
-remoteVideo.srcObject = remoteStream;
+    peerConnection.ontrack = e => {
+      console.log("REMOTE STREAM RECEIVED");
 
-const remoteAudioContext = new AudioContext();
-const remoteAnalyser = remoteAudioContext.createAnalyser();
-const remoteSource = remoteAudioContext.createMediaStreamSource(remoteStream);
+      const remoteStream = e.streams[0];
+      remoteVideo.srcObject = remoteStream;
+      remoteVideo.play().catch(() => {});
 
-remoteSource.connect(remoteAnalyser);
-remoteAnalyser.fftSize = 512;
+      // ===== REMOTE ACTIVE SPEAKER DETECTION =====
+      const remoteAudioContext = new AudioContext();
+      const remoteAnalyser = remoteAudioContext.createAnalyser();
+      const remoteSource =
+        remoteAudioContext.createMediaStreamSource(remoteStream);
 
-const remoteData = new Uint8Array(remoteAnalyser.frequencyBinCount);
+      remoteSource.connect(remoteAnalyser);
+      remoteAnalyser.fftSize = 512;
 
-function detectRemoteSpeech() {
-  remoteAnalyser.getByteFrequencyData(remoteData);
+      const remoteData =
+        new Uint8Array(remoteAnalyser.frequencyBinCount);
 
-  const volume = remoteData.reduce((a, b) => a + b) / remoteData.length;
+      function detectRemoteSpeech() {
+        remoteAnalyser.getByteFrequencyData(remoteData);
+        const volume =
+          remoteData.reduce((a, b) => a + b, 0) / remoteData.length;
 
-  if (volume > 25) {
-    document.querySelector(".active-speaker")?.classList.add("active");
-  } else {
-    document.querySelector(".active-speaker")?.classList.remove("active");
-  }
+        updateRemoteSpeaker(volume > 25);
+        requestAnimationFrame(detectRemoteSpeech);
+      }
 
-  requestAnimationFrame(detectRemoteSpeech);
-}
-
-detectRemoteSpeech();
-
+      detectRemoteSpeech();
     };
 
     peerConnection.onicecandidate = e => {
-      if (e.candidate) socket.emit("ice-candidate", e.candidate);
+      if (e.candidate) {
+        socket.emit("ice-candidate", e.candidate);
+      }
     };
 
-    socket.emit("ready"); // 👈 VERY IMPORTANT
+    socket.emit("ready");
+  })
+  .catch(err => {
+    console.error("getUserMedia ERROR:", err);
   });
 
-// Receive role
-socket.on("role", r => role = r);
-
-// When both ready → only caller creates offer
-socket.on("both-ready", async () => {
-  if (role === "caller") {
-    const offer = await peerConnection.createOffer();
-    await peerConnection.setLocalDescription(offer);
-    socket.emit("offer", offer);
-  }
+// ===== SOCKET SIGNALING =====
+socket.on("ready", async () => {
+  const offer = await peerConnection.createOffer();
+  await peerConnection.setLocalDescription(offer);
+  socket.emit("offer", offer);
 });
 
-// Offer
 socket.on("offer", async offer => {
   await peerConnection.setRemoteDescription(offer);
   const answer = await peerConnection.createAnswer();
@@ -112,94 +149,14 @@ socket.on("offer", async offer => {
   socket.emit("answer", answer);
 });
 
-// Answer
 socket.on("answer", async answer => {
   await peerConnection.setRemoteDescription(answer);
 });
 
-// ICE
 socket.on("ice-candidate", async candidate => {
-  await peerConnection.addIceCandidate(candidate);
+  try {
+    await peerConnection.addIceCandidate(candidate);
+  } catch (e) {
+    console.error("ICE ERROR", e);
+  }
 });
-// ===== MUTE & CAMERA CONTROLS =====
-const muteBtn = document.getElementById("muteBtn");
-const cameraBtn = document.getElementById("cameraBtn");
-
-let isMuted = false;
-let isCameraOff = false;
-
-muteBtn?.addEventListener("click", () => {
-  if (!localStream) return;
-
-  localStream.getAudioTracks().forEach(track => {
-    track.enabled = isMuted;
-  });
-
-  isMuted = !isMuted;
-  muteBtn.innerText = isMuted ? "🔇 Unmute" : "🎤 Mute";
-  muteBtn.classList.toggle("active");
-
-});
-
-cameraBtn?.addEventListener("click", () => {
-  if (!localStream) return;
-
-  localStream.getVideoTracks().forEach(track => {
-    track.enabled = isCameraOff;
-  });
-
-  isCameraOff = !isCameraOff;
-  cameraBtn.innerText = isCameraOff ? "📷 Camera On" : "📷 Camera Off";
-});
-// ===== SPEECH TO TEXT =====
-// ===== STABLE SPEECH TO TEXT =====
-const transcriptDiv = document.getElementById("transcript");
-const startBtn = document.getElementById("startTranscriptBtn");
-
-const SpeechRecognition =
-  window.SpeechRecognition || window.webkitSpeechRecognition;
-
-let recognition;
-let finalTranscript = "";
-
-if (SpeechRecognition) {
-  recognition = new SpeechRecognition();
-  recognition.continuous = true;
-  recognition.interimResults = true;
-  recognition.lang = "en-US";
-
-  recognition.onresult = event => {
-    let interim = "";
-
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      const text = event.results[i][0].transcript;
-
-      if (event.results[i].isFinal) {
-        finalTranscript += text + " ";
-      } else {
-        interim += text;
-      }
-    }
-
-    transcriptDiv.innerText = finalTranscript + interim;
-  };
-
-  // 🔥 THIS IS THE KEY FIX
-  recognition.onend = () => {
-    console.log("Speech recognition stopped, restarting...");
-    recognition.start();
-  };
-
-  recognition.onerror = e => {
-    console.error("Speech error:", e);
-  };
-
-  startBtn.onclick = () => {
-    recognition.start();
-    startBtn.disabled = true;
-    startBtn.innerText = "🎙 Transcribing...";
-  };
-
-} else {
-  transcriptDiv.innerText = "Speech Recognition not supported in this browser";
-}
