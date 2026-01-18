@@ -53,6 +53,29 @@ function updateRemoteSpeaker(isSpeaking) {
     }, 300);
   }
 }
+const mainView = document.getElementById("mainView");
+const selfView = document.getElementById("selfView");
+
+let pinned = "remote"; // default
+
+function pinRemote() {
+  if (pinned === "remote") return;
+
+  mainView.appendChild(remoteVideo);
+  selfView.appendChild(localVideo);
+
+  pinned = "remote";
+}
+
+function pinLocal() {
+  if (pinned === "local") return;
+
+  mainView.appendChild(localVideo);
+  selfView.appendChild(remoteVideo);
+
+  pinned = "local";
+}
+
 
 // ===== GET USER MEDIA =====
 navigator.mediaDevices.getUserMedia({ video: true, audio: true })
@@ -79,7 +102,10 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
       const volume =
         dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
 
-      updateLocalSpeaker(volume > 25);
+      const speaking = volume > 25;
+updateLocalSpeaker(speaking);
+if (speaking) pinLocal();
+
       requestAnimationFrame(detectSpeech);
     }
 
@@ -116,7 +142,10 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
         const volume =
           remoteData.reduce((a, b) => a + b, 0) / remoteData.length;
 
-        updateRemoteSpeaker(volume > 25);
+       const speaking = volume > 25;
+updateRemoteSpeaker(speaking);
+if (speaking) pinRemote();
+
         requestAnimationFrame(detectRemoteSpeech);
       }
 
